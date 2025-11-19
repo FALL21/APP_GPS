@@ -1,0 +1,77 @@
+.container {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-md);
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.container h2 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.error {
+  background: #fee2e2;
+  color: var(--danger-color);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #fecaca;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

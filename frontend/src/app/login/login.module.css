@@ -1,0 +1,102 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(120deg, #0b2c5e 0%, #123a7d 45%, #f28c1b 100%);
+}
+
+.card {
+  background: #fff;
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem 2.25rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.logoWrapper {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 15px 30px rgba(12, 35, 74, 0.25);
+}
+
+.logoImage {
+  width: 120px;
+  height: 120px;
+}
+
+.tagline {
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+  letter-spacing: 0.04em;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.error {
+  background-color: #fee2e2;
+  color: var(--danger-color);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #fecaca;
+}
+
+.registerLink {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.registerLink a {
+  color: var(--secondary-color);
+  font-weight: 500;
+}
+
+.registerLink a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 1.75rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+}
