@@ -88,7 +88,7 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
 
   const handleEditUser = (userToEdit: User) => {
     setEditingUser(userToEdit);
-    setActiveTab('create-user');
+    setShowCreateModal(true);
   };
 
   const handleCreateUser = () => {
