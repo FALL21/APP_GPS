@@ -17,8 +17,8 @@ import { LocationGateway } from './location/location.gateway';
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 3306,
-      username: process.env.DB_USERNAME || 'gpsuser',
+      port: parseInt(process.env.DB_PORT, 10) || 3306,
+      username: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || 'gpspassword',
       database: process.env.DB_DATABASE || 'gps_tracking',
       entities: [User, Location],
