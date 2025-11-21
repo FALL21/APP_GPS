@@ -15,6 +15,8 @@ export class AppController {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      port: process.env.PORT || 3001,
     };
   }
 }
