@@ -3,6 +3,11 @@ import { authApi, CreateLocationDto } from './api';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
 
+// Log pour debug en développement
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  console.log('🔌 WebSocket URL:', WS_URL);
+}
+
 class SocketService {
   private socket: Socket | null = null;
 

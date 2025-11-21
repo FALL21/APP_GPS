@@ -7,9 +7,9 @@ async function bootstrap() {
 
   // Activer CORS pour permettre les connexions depuis le frontend
   const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://frontend:3000',
+      'http://localhost:3000',
+      'http://localhost:8080',
+      'http://frontend:3000',
   ];
 
   // Ajouter l'URL du frontend depuis les variables d'environnement si définie

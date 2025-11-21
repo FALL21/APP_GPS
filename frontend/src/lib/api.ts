@@ -4,6 +4,11 @@ import { AuthResponse, LoginCredentials, RegisterData, Location, User } from '@/
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Log pour debug en développement
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  console.log('🔗 API URL:', API_URL);
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {

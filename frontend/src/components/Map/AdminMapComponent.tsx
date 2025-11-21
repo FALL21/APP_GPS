@@ -75,12 +75,12 @@ export default function AdminMapComponent({
   // Grouper les locations par utilisateur
   const locationsByUser = useMemo(() => {
     const map = new Map<number, Location[]>();
-    allLocations.forEach(loc => {
+  allLocations.forEach(loc => {
       if (!map.has(loc.userId)) {
         map.set(loc.userId, []);
-      }
+    }
       map.get(loc.userId)!.push(loc);
-    });
+  });
     return map;
   }, [allLocations]);
 
