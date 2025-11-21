@@ -14,6 +14,11 @@ ENV NODE_ENV=$NODE_ENV
 COPY package*.json ./
 RUN npm ci
 
+# Copier tsconfig.json et next.config.js en premier pour s'assurer qu'ils sont présents
+COPY tsconfig.json ./
+COPY next.config.js ./
+
+# Copier le reste des fichiers
 COPY . .
 RUN npm run build
 
