@@ -15,7 +15,12 @@ async function bootstrap() {
   // Ajouter l'URL du frontend depuis les variables d'environnement si définie
   if (process.env.FRONTEND_PUBLIC_URL) {
     allowedOrigins.push(process.env.FRONTEND_PUBLIC_URL);
+    console.log('✅ CORS: Frontend URL ajoutée:', process.env.FRONTEND_PUBLIC_URL);
+  } else {
+    console.warn('⚠️ CORS: FRONTEND_PUBLIC_URL non définie!');
   }
+
+  console.log('🌐 CORS: Origines autorisées:', allowedOrigins);
 
   app.enableCors({
     origin: allowedOrigins,
