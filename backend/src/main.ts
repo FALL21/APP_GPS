@@ -67,6 +67,17 @@ async function bootstrap() {
   console.log(`🚀 Backend GPS démarré sur le port ${port} (accessible sur 0.0.0.0)`);
   console.log(`✅ Health check disponible sur: http://0.0.0.0:${port}/health`);
   console.log(`✅ API disponible sur: http://0.0.0.0:${port}/`);
+
+  // Gérer les signaux de terminaison proprement
+  process.on('SIGTERM', () => {
+    console.log('⚠️ SIGTERM reçu, arrêt propre du backend...');
+    app.close();
+  });
+
+  process.on('SIGINT', () => {
+    console.log('⚠️ SIGINT reçu, arrêt propre du backend...');
+    app.close();
+  });
 }
 
 bootstrap();
