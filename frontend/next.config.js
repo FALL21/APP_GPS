@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -13,6 +15,13 @@ const nextConfig = {
       ...config.resolve.fallback,
       fs: false,
     };
+    
+    // Configurer les alias pour @/
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
+    
     return config;
   },
 }
