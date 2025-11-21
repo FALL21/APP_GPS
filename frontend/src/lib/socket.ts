@@ -3,9 +3,12 @@ import { authApi, CreateLocationDto } from './api';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
 
-// Log pour debug en développement
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  console.log('🔌 WebSocket URL:', WS_URL);
+// Log pour vérifier l'URL utilisée (toujours affiché)
+if (typeof window !== 'undefined') {
+  console.log('🔌 WebSocket URL configurée:', WS_URL);
+  if (WS_URL.includes('localhost') && window.location.hostname !== 'localhost') {
+    console.error('⚠️ ATTENTION: La WebSocket URL pointe vers localhost en production! Vérifiez NEXT_PUBLIC_WS_URL dans Railway.');
+  }
 }
 
 class SocketService {

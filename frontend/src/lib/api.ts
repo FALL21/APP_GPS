@@ -4,9 +4,12 @@ import { AuthResponse, LoginCredentials, RegisterData, Location, User } from '@/
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-// Log pour debug en développement
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  console.log('🔗 API URL:', API_URL);
+// Log pour vérifier l'URL utilisée (toujours affiché)
+if (typeof window !== 'undefined') {
+  console.log('🔗 API URL configurée:', API_URL);
+  if (API_URL.includes('localhost') && window.location.hostname !== 'localhost') {
+    console.error('⚠️ ATTENTION: L\'API URL pointe vers localhost en production! Vérifiez NEXT_PUBLIC_API_URL dans Railway.');
+  }
 }
 
 const api = axios.create({
