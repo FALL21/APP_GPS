@@ -65,6 +65,8 @@ async function bootstrap() {
   console.log(`🔧 Configuration du port: PORT=${process.env.PORT || 'non défini'} -> Forcé à 3001 (port exposé par Railway)`);
   await app.listen(port, '0.0.0.0'); // Écouter sur toutes les interfaces
   console.log(`🚀 Backend GPS démarré sur le port ${port} (accessible sur 0.0.0.0)`);
+  console.log(`✅ Health check disponible sur: http://0.0.0.0:${port}/health`);
+  console.log(`✅ API disponible sur: http://0.0.0.0:${port}/`);
 }
 
 bootstrap();
