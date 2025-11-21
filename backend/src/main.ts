@@ -59,6 +59,7 @@ async function bootstrap() {
   );
 
   const port = process.env.PORT || 3001;
+  console.log(`🔧 Configuration du port: PORT=${process.env.PORT || 'non défini (défaut: 3001)'}`);
   await app.listen(port);
   console.log(`🚀 Backend GPS démarré sur le port ${port}`);
 }
