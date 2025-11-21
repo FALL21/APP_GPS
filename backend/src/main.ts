@@ -58,12 +58,13 @@ async function bootstrap() {
     }),
   );
 
-  // Railway définit automatiquement PORT avec le port exposé
-  // On utilise cette variable pour écouter sur le bon port
-  const port = parseInt(process.env.PORT || '3001', 10);
-  console.log(`🔧 Configuration du port: PORT=${process.env.PORT || 'non défini (défaut: 3001)'} -> Écoute sur ${port}`);
+  // Railway expose le port 3001 dans les settings de networking
+  // On force le port 3001 pour correspondre au port exposé
+  // Note: Si Railway définit PORT=8080, on l'ignore car le port exposé est 3001
+  const port = 3001;
+  console.log(`🔧 Configuration du port: PORT=${process.env.PORT || 'non défini'} -> Forcé à 3001 (port exposé par Railway)`);
   await app.listen(port, '0.0.0.0'); // Écouter sur toutes les interfaces
-  console.log(`🚀 Backend GPS démarré sur le port ${port}`);
+  console.log(`🚀 Backend GPS démarré sur le port ${port} (accessible sur 0.0.0.0)`);
 }
 
 bootstrap();
