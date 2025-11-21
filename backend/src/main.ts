@@ -58,8 +58,10 @@ async function bootstrap() {
     }),
   );
 
-  const port = process.env.PORT || 3001;
-  console.log(`🔧 Configuration du port: PORT=${process.env.PORT || 'non défini (défaut: 3001)'}`);
+  // Railway expose le port 3001, mais peut définir PORT=8080
+  // On force le port 3001 pour correspondre au port exposé par Railway
+  const port = 3001;
+  console.log(`🔧 Configuration du port: PORT=${process.env.PORT || 'non défini'} -> Forcé à 3001 pour Railway`);
   await app.listen(port);
   console.log(`🚀 Backend GPS démarré sur le port ${port}`);
 }
