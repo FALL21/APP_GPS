@@ -20,10 +20,30 @@ async function bootstrap() {
     console.warn('⚠️ CORS: FRONTEND_PUBLIC_URL non définie!');
   }
 
+  // En production, accepter aussi les origines Railway par défaut
+  if (process.env.NODE_ENV === 'production') {
+    allowedOrigins.push('https://prodis-gps.up.railway.app');
+    allowedOrigins.push('https://celebrated-friendship-production.up.railway.app');
+  }
+
   console.log('🌐 CORS: Origines autorisées:', allowedOrigins);
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // En production, accepter toutes les origines Railway si FRONTEND_PUBLIC_URL n'est pas définie
+      if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_PUBLIC_URL) {
+        if (!origin || origin.includes('.railway.app') || origin.includes('localhost')) {
+          return callback(null, true);
+        }
+      }
+      // Sinon, utiliser la liste des origines autorisées
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn('🚫 CORS: Origine bloquée:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
