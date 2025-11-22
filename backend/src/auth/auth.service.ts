@@ -31,6 +31,26 @@ export class AuthService {
       throw new ConflictException('Cet email est déjà utilisé');
     }
 
+    // Vérifier s'il existe déjà un super admin
+    const existingSuperAdmin = await this.userRepository.findOne({
+      where: { role: 'super_admin' },
+    });
+
+    // Si aucun super admin n'existe et que le rôle demandé est super_admin, autoriser
+    // Sinon, si aucun super admin n'existe, créer le premier utilisateur en super_admin
+    let finalRole = role || 'user';
+    if (!existingSuperAdmin) {
+      if (role === 'super_admin' || !role) {
+        finalRole = 'super_admin';
+        console.log('⚠️  Premier utilisateur créé en tant que super_admin (aucun super admin existant)');
+      }
+    } else if (role === 'super_admin') {
+      // Si un super admin existe déjà, seul un super admin peut créer un autre super admin
+      // Mais via register, on ne peut pas créer de super admin si un existe déjà
+      finalRole = 'user';
+      console.log('⚠️  Tentative de création de super_admin refusée (un super admin existe déjà). Rôle défini à "user".');
+    }
+
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -39,7 +59,7 @@ export class AuthService {
       email,
       password: hashedPassword,
       name,
-      role: role || 'user',
+      role: finalRole,
     });
 
     const savedUser = await this.userRepository.save(user);
