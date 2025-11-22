@@ -35,6 +35,11 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Post('seed-super-admin')
+  async seedSuperAdmin() {
+    return this.authService.seedSuperAdmin();
+  }
+
   @Get('users')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'super_admin')
