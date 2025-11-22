@@ -22,7 +22,9 @@ import { LocationGateway } from './location/location.gateway';
       password: process.env.DB_PASSWORD || 'gpspassword',
       database: process.env.DB_DATABASE || 'gps_tracking',
       entities: [User, Location],
-      synchronize: process.env.NODE_ENV !== 'production', // Ne pas utiliser en production
+      // Temporairement activé pour créer les tables en production
+      // TODO: Créer des migrations et désactiver synchronize
+      synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true' || process.env.NODE_ENV !== 'production',
       autoLoadEntities: true,
     }),
     AuthModule,
