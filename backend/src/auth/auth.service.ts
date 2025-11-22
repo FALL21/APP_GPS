@@ -31,6 +31,10 @@ export class AuthService {
       throw new ConflictException('Cet email est déjà utilisé');
     }
 
+    // Sécurité : empêcher la création de super_admin via l'inscription publique
+    const allowedRoles = ['user', 'admin'];
+    const userRole = role && allowedRoles.includes(role) ? role : 'user';
+
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -39,7 +43,7 @@ export class AuthService {
       email,
       password: hashedPassword,
       name,
-      role: role || 'user',
+      role: userRole,
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -281,53 +285,60 @@ export class AuthService {
     return { message: 'Utilisateur supprimé avec succès' };
   }
 
-  async seedSuperAdmin() {
+  async createSuperAdmin(createSuperAdminDto: any) {
+    const { email, password, name, secretCode } = createSuperAdminDto;
+
+    // Vérifier le code secret
+    const validSecretCode = process.env.SUPER_ADMIN_SECRET_CODE || 'PRODIS_SUPER_ADMIN_2024';
+    if (secretCode !== validSecretCode) {
+      throw new UnauthorizedException('Code secret invalide');
+    }
+
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Cet email est déjà utilisé');
+    }
+
     // Vérifier s'il existe déjà un super admin
     const existingSuperAdmin = await this.userRepository.findOne({
       where: { role: 'super_admin' },
     });
 
     if (existingSuperAdmin) {
-      return {
-        message: 'Un super admin existe déjà',
-        email: existingSuperAdmin.email,
-      };
+      throw new ConflictException('Un super admin existe déjà. Utilisez l\'interface admin pour créer d\'autres super admins.');
     }
 
-    // Vérifier si l'email existe déjà
-    const existingUser = await this.userRepository.findOne({
-      where: { email: 'superadmin@gsp.com' },
-    });
-
-    if (existingUser) {
-      // Mettre à jour l'utilisateur existant
-      const hashedPassword = await bcrypt.hash('GPS@2025', 10);
-      existingUser.password = hashedPassword;
-      existingUser.role = 'super_admin';
-      existingUser.name = 'Super Admin';
-      existingUser.isActive = true;
-      await this.userRepository.save(existingUser);
-      return {
-        message: 'Super admin mis à jour avec succès',
-        email: existingUser.email,
-      };
-    }
+    // Hasher le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Créer le super admin
-    const hashedPassword = await bcrypt.hash('GPS@2025', 10);
-    const superAdmin = this.userRepository.create({
-      email: 'superadmin@gsp.com',
+    const user = this.userRepository.create({
+      email,
       password: hashedPassword,
-      name: 'Super Admin',
+      name,
       role: 'super_admin',
       isActive: true,
     });
 
-    await this.userRepository.save(superAdmin);
+    const savedUser = await this.userRepository.save(user);
+
+    // Générer le token JWT
+    const payload = { email: savedUser.email, sub: savedUser.id };
+    const accessToken = this.jwtService.sign(payload);
 
     return {
+      accessToken,
+      user: {
+        id: savedUser.id,
+        email: savedUser.email,
+        name: savedUser.name,
+        role: savedUser.role,
+      },
       message: 'Super admin créé avec succès',
-      email: superAdmin.email,
     };
   }
 }

@@ -16,6 +16,7 @@ import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ListUsersDto } from './dto/list-users.dto';
+import { CreateSuperAdminDto } from './dto/create-super-admin.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
@@ -35,9 +36,9 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @Post('seed-super-admin')
-  async seedSuperAdmin() {
-    return this.authService.seedSuperAdmin();
+  @Post('create-super-admin')
+  async createSuperAdmin(@Body() createSuperAdminDto: CreateSuperAdminDto) {
+    return this.authService.createSuperAdmin(createSuperAdminDto);
   }
 
   @Get('users')
