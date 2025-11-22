@@ -91,12 +91,25 @@ export default function DashboardPage() {
       },
       (error) => {
         console.error('Erreur de géolocalisation:', error);
-        alert('Erreur de géolocalisation. Vérifiez les permissions de votre navigateur.');
+        // Code 3 = TIMEOUT - ne pas afficher d'alerte car watchPosition peut continuer
+        if (error.code === 3) {
+          console.warn('Timeout de géolocalisation, mais le suivi continue...');
+          return;
+        }
+        // Autres erreurs (permission refusée, position indisponible)
+        if (error.code === 1 || error.code === 2) {
+          alert('Erreur de géolocalisation. Vérifiez les permissions de votre navigateur.');
+          setIsTracking(false);
+          if (watchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+            watchIdRef.current = null;
+          }
+        }
       },
       {
         enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0,
+        timeout: 15000, // Augmenté à 15 secondes pour éviter les timeouts
+        maximumAge: 10000, // Accepter une position jusqu'à 10 secondes
       }
     );
 
