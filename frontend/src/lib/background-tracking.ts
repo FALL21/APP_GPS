@@ -18,10 +18,10 @@ interface Navigator {
 export class BackgroundTrackingManager {
   private wakeLock: WakeLockSentinel | null = null;
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
-  private gpsWorker: Worker | null = null;
   private isPageVisible = true;
   private visibilityChangeHandler: (() => void) | null = null;
   private keepAliveInterval: NodeJS.Timeout | null = null;
+  private watchId: number | null = null;
 
   constructor() {
     if (typeof window === 'undefined') return;
@@ -43,16 +43,6 @@ export class BackgroundTrackingManager {
         });
       } catch (error) {
         console.error('[Background Tracking] Erreur lors de l\'enregistrement du Service Worker:', error);
-      }
-    }
-
-    // Initialiser le GPS Worker
-    if (typeof Worker !== 'undefined') {
-      try {
-        this.gpsWorker = new Worker('/gps-worker.js');
-        console.log('[Background Tracking] GPS Worker initialisé');
-      } catch (error) {
-        console.error('[Background Tracking] Erreur lors de l\'initialisation du GPS Worker:', error);
       }
     }
 
@@ -131,44 +121,51 @@ export class BackgroundTrackingManager {
     onPositionUpdate: (location: any) => void,
     onError?: (error: any) => void
   ): Promise<boolean> {
+    if (!('geolocation' in navigator)) {
+      throw new Error('geolocation-not-supported');
+    }
+
     // 1. Activer le Wake Lock
     await this.requestWakeLock();
 
-    // 2. Démarrer le GPS Worker
-    if (this.gpsWorker) {
-      this.gpsWorker.onmessage = (event) => {
-        const { type, location, error } = event.data;
-
-        switch (type) {
-          case 'POSITION_UPDATE':
-            onPositionUpdate(location);
-            break;
-          case 'ERROR':
-            if (onError) {
-              onError(error);
-            }
-            break;
-          case 'TRACKING_STARTED':
-            console.log('[Background Tracking] Tracking démarré dans le Worker');
-            break;
-          case 'TRACKING_STOPPED':
-            console.log('[Background Tracking] Tracking arrêté dans le Worker');
-            break;
-          case 'WORKER_ALIVE':
-            // Worker toujours actif
-            break;
-        }
-      };
-
-      this.gpsWorker.postMessage({
-        type: 'START_TRACKING',
-        data: {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 10000,
-        },
-      });
+    // 2. Démarrer le suivi de géolocalisation côté main thread
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
     }
+
+    this.watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const locationData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          speed: position.coords.speed ? position.coords.speed * 3.6 : undefined,
+          heading: position.coords.heading || undefined,
+          accuracy: position.coords.accuracy,
+          timestamp: position.timestamp,
+        };
+        onPositionUpdate(locationData);
+      },
+      (error) => {
+        if (error.code === 3) {
+          console.warn('[Background Tracking] Timeout de géolocalisation, mais le suivi continue...');
+          return;
+        }
+
+        if (error.code === 1 || error.code === 2) {
+          this.stopTracking();
+        }
+
+        if (onError) {
+          onError(error);
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000,
+      }
+    );
 
     // 3. Démarrer le keep-alive
     this.startKeepAlive();
@@ -188,9 +185,10 @@ export class BackgroundTrackingManager {
 
   // Arrêter le tracking
   async stopTracking(): Promise<void> {
-    // 1. Arrêter le GPS Worker
-    if (this.gpsWorker) {
-      this.gpsWorker.postMessage({ type: 'STOP_TRACKING' });
+    // 1. Arrêter la géolocalisation
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
     }
 
     // 2. Libérer le Wake Lock
@@ -213,11 +211,6 @@ export class BackgroundTrackingManager {
           type: 'KEEP_ALIVE',
         });
       }
-
-      // Envoyer un ping au GPS Worker
-      if (this.gpsWorker) {
-        this.gpsWorker.postMessage({ type: 'PING' });
-      }
     }, 120000); // 2 minutes
   }
 
@@ -236,10 +229,6 @@ export class BackgroundTrackingManager {
       document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
     }
 
-    if (this.gpsWorker) {
-      this.gpsWorker.terminate();
-      this.gpsWorker = null;
-    }
   }
 
   // Vérifier si le tracking en arrière-plan est supporté
