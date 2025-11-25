@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api';
-import Link from 'next/link';
 import styles from './login.module.css';
 import ProdisLogo from '@/components/Brand/ProdisLogo';
 
@@ -72,11 +71,6 @@ export default function LoginPage() {
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
-
-        <p className={styles.registerLink}>
-          Pas encore de compte ?{' '}
-          <Link href="/register">S&apos;inscrire</Link>
-        </p>
       </div>
     </div>
   );

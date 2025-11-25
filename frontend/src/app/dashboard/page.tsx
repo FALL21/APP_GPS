@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { authApi, locationApi, usersApi } from '@/lib/api';
 import { socketService } from '@/lib/socket';
 import { Location, User, GpsActivity } from '@/types';
+import { BackgroundTrackingManager } from '@/lib/background-tracking';
 import styles from './dashboard.module.css';
 import UserDashboard from '@/components/Dashboard/UserDashboard';
 import AdminDashboard from '@/components/Dashboard/AdminDashboard';
@@ -24,6 +25,13 @@ export default function DashboardPage() {
   const [isTracking, setIsTracking] = useState(false);
   const watchIdRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const backgroundTrackingRef = useRef<BackgroundTrackingManager | null>(null);
+  const [backgroundTrackingSupported, setBackgroundTrackingSupported] = useState({
+    serviceWorker: false,
+    wakeLock: false,
+    webWorker: false,
+    backgroundSync: false,
+  });
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -57,7 +65,7 @@ export default function DashboardPage() {
     });
   }, []);
 
-  const startTracking = () => {
+  const startTracking = async () => {
     if (!navigator.geolocation) {
       alert('La géolocalisation n\'est pas supportée par votre navigateur');
       return;
@@ -68,6 +76,50 @@ export default function DashboardPage() {
 
     setIsTracking(true);
 
+    // Utiliser le système de tracking en arrière-plan si disponible
+    if (backgroundTrackingRef.current) {
+      try {
+        await backgroundTrackingRef.current.startTracking(
+          async (locationData) => {
+            try {
+              // Sauvegarder via l'API
+              const savedLocation = await locationApi.create({
+                latitude: locationData.latitude,
+                longitude: locationData.longitude,
+                speed: locationData.speed,
+                heading: locationData.heading,
+              });
+              setCurrentLocation(savedLocation);
+              setLocations(prev => [savedLocation, ...prev].slice(0, 100));
+
+              // Émettre via WebSocket pour les autres clients
+              socketService.updateLocation(currentUser.id, {
+                latitude: locationData.latitude,
+                longitude: locationData.longitude,
+                speed: locationData.speed,
+                heading: locationData.heading,
+              });
+            } catch (error) {
+              console.error('Erreur lors de la sauvegarde de la position:', error);
+            }
+          },
+          (error) => {
+            console.error('Erreur de géolocalisation:', error);
+            if (error.code === 1 || error.code === 2) {
+              alert('Erreur de géolocalisation. Vérifiez les permissions de votre navigateur.');
+              setIsTracking(false);
+            }
+          }
+        );
+        console.log('[Dashboard] Tracking en arrière-plan activé');
+        return;
+      } catch (error) {
+        console.warn('[Dashboard] Impossible d\'utiliser le tracking en arrière-plan, utilisation du mode standard:', error);
+        // Fallback vers le mode standard
+      }
+    }
+
+    // Mode standard (fallback)
     const id = navigator.geolocation.watchPosition(
       async (position) => {
         const locationData = {
@@ -116,7 +168,13 @@ export default function DashboardPage() {
     watchIdRef.current = id;
   };
 
-  const stopTracking = useCallback(() => {
+  const stopTracking = useCallback(async () => {
+    // Arrêter le tracking en arrière-plan si actif
+    if (backgroundTrackingRef.current) {
+      await backgroundTrackingRef.current.stopTracking();
+    }
+
+    // Arrêter le tracking standard si actif
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -136,8 +194,25 @@ export default function DashboardPage() {
     loadInitialData();
     initializeSocket();
 
+    // Initialiser le système de tracking en arrière-plan
+    if (typeof window !== 'undefined') {
+      const supported = BackgroundTrackingManager.isSupported();
+      setBackgroundTrackingSupported(supported);
+      
+      if (supported.serviceWorker || supported.webWorker || supported.wakeLock) {
+        backgroundTrackingRef.current = new BackgroundTrackingManager();
+        console.log('[Dashboard] Système de tracking en arrière-plan initialisé', supported);
+      } else {
+        console.warn('[Dashboard] Tracking en arrière-plan non supporté sur ce navigateur');
+      }
+    }
+
     return () => {
       stopTracking();
+      if (backgroundTrackingRef.current) {
+        backgroundTrackingRef.current.cleanup();
+        backgroundTrackingRef.current = null;
+      }
       socketService.disconnect();
     };
   }, [router, loadInitialData, initializeSocket, stopTracking]);

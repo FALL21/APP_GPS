@@ -1,0 +1,47 @@
+{
+  "name": "PRODIS GPS - Suivi en Temps Réel",
+  "short_name": "PRODIS GPS",
+  "description": "Application de suivi GPS en temps réel pour PRODIS Mobility",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b2c5e",
+  "theme_color": "#0b2c5e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["navigation", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Démarrer le suivi",
+      "short_name": "Suivi",
+      "description": "Démarrer le suivi GPS",
+      "url": "/dashboard?action=start",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    "geolocation",
+    "notifications"
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
+

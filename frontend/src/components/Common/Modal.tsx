@@ -52,3 +52,4 @@ export default function Modal({ open, title, onClose, children, width = '600px' 
 
 
 
+

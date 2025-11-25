@@ -124,3 +124,4 @@ Pour vérifier qu'un utilisateur est bien super admin :
 - L'email existe déjà dans la base de données
 - Utilisez un autre email ou connectez-vous avec le compte existant
 
+
