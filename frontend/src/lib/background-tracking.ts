@@ -72,7 +72,7 @@ export class BackgroundTrackingManager {
       console.log('[Background Tracking] Wake Lock activé');
 
       // Écouter la libération du Wake Lock
-      this.wakeLock.addEventListener('release', () => {
+      this.wakeLock?.addEventListener('release', () => {
         console.log('[Background Tracking] Wake Lock libéré');
         this.wakeLock = null;
       });
