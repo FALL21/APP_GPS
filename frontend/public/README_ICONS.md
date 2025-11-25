@@ -26,6 +26,7 @@ Si vous avez le logo `prodis.jpeg` dans `frontend/src/app/`, vous pouvez :
 ### Option 3 : Créer manuellement
 
 Utilisez le logo PRODIS et créez deux versions carrées avec :
+
 - Fond transparent ou couleur de thème (#0b2c5e)
 - Logo centré
 - Format PNG
@@ -33,6 +34,7 @@ Utilisez le logo PRODIS et créez deux versions carrées avec :
 ## Emplacement
 
 Les icônes doivent être placées dans :
+
 ```
 frontend/public/icon-192.png
 frontend/public/icon-512.png
@@ -41,4 +43,3 @@ frontend/public/icon-512.png
 ## Note
 
 L'application fonctionnera sans ces icônes, mais l'installation PWA ne sera pas optimale.
-
