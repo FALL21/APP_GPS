@@ -91,11 +91,12 @@ export class LocationGateway
     }
   }
 
-  // Méthode pour diffuser une position depuis le service
+  // Méthode pour diffuser une position depuis d'autres parties de l'application
   broadcastLocation(userId: number, location: any) {
-    this.server.to(`user_${userId}`).emit('location_updated', {
-      userId,
-      location,
-    });
+    const payload = { userId, location };
+    // Clients abonnés à cet utilisateur
+    this.server.to(`user_${userId}`).emit('location_updated', payload);
+    // Dashboards admin / super admin (écoutent globalement)
+    this.server.emit('location_updated', payload);
   }
 }

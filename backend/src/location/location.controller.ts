@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthService } from '../auth/auth.service';
+import { LocationGateway } from './location.gateway';
 
 @Controller('locations')
 @UseGuards(JwtAuthGuard)
@@ -20,11 +21,18 @@ export class LocationController {
   constructor(
     private readonly locationService: LocationService,
     private readonly authService: AuthService,
+    private readonly locationGateway: LocationGateway,
   ) {}
 
   @Post()
-  create(@Request() req, @Body() createLocationDto: CreateLocationDto) {
-    return this.locationService.create(req.user.userId, createLocationDto);
+  async create(@Request() req, @Body() createLocationDto: CreateLocationDto) {
+    const location = await this.locationService.create(
+      req.user.userId,
+      createLocationDto,
+    );
+    // Diffuser la mise à jour de position aux dashboards via WebSocket
+    this.locationGateway.broadcastLocation(req.user.userId, location);
+    return location;
   }
 
   @Get()
