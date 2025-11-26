@@ -91,3 +91,4 @@ Les logs de débogage sont disponibles dans la console du navigateur avec le pr�
 - Ce système **maximise les chances** que le tracking continue, mais ne garantit pas un fonctionnement 100% fiable
 - Pour un tracking GPS continu garanti, une application native est recommandée
 
+

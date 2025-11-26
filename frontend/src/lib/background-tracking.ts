@@ -22,6 +22,9 @@ export class BackgroundTrackingManager {
   private visibilityChangeHandler: (() => void) | null = null;
   private keepAliveInterval: NodeJS.Timeout | null = null;
   private watchId: number | null = null;
+  private hiddenPollInterval: NodeJS.Timeout | null = null;
+  private onPositionUpdateCallback: ((location: any) => void) | null = null;
+  private onErrorCallback: ((error: any) => void) | null = null;
 
   constructor() {
     if (typeof window === 'undefined') return;
@@ -101,11 +104,12 @@ export class BackgroundTrackingManager {
 
       if (wasVisible && !this.isPageVisible) {
         console.log('[Background Tracking] Page en arrière-plan');
-        // La page est passée en arrière-plan
-        // Le Service Worker et le GPS Worker continueront de fonctionner
+        this.startHiddenPolling();
       } else if (!wasVisible && this.isPageVisible) {
         console.log('[Background Tracking] Page au premier plan');
-        // La page est revenue au premier plan
+        this.stopHiddenPolling();
+        // Rafraîchir immédiatement la position lorsque l'utilisateur revient
+        this.captureCurrentPosition();
         // Réactiver le Wake Lock si nécessaire
         if (this.wakeLock === null) {
           this.requestWakeLock();
@@ -116,6 +120,63 @@ export class BackgroundTrackingManager {
     document.addEventListener('visibilitychange', this.visibilityChangeHandler);
   }
 
+  private startHiddenPolling() {
+    if (this.hiddenPollInterval || this.watchId === null) {
+      return;
+    }
+
+    this.hiddenPollInterval = setInterval(() => {
+      this.captureCurrentPosition();
+    }, 30000); // toutes les 30 secondes en arrière-plan
+  }
+
+  private stopHiddenPolling() {
+    if (this.hiddenPollInterval) {
+      clearInterval(this.hiddenPollInterval);
+      this.hiddenPollInterval = null;
+    }
+  }
+
+  private async captureCurrentPosition() {
+    if (
+      typeof navigator === 'undefined' ||
+      !('geolocation' in navigator) ||
+      !this.onPositionUpdateCallback
+    ) {
+      return;
+    }
+
+    return new Promise<void>((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            speed: position.coords.speed ? position.coords.speed * 3.6 : undefined,
+            heading: position.coords.heading || undefined,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+          };
+          this.onPositionUpdateCallback?.(locationData);
+          resolve();
+        },
+        (error) => {
+          if (error.code !== 3) {
+            this.onErrorCallback?.(error);
+          } else {
+            console.warn('[Background Tracking] Timeout lors de la capture instantanée');
+          }
+          resolve();
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
+    });
+  }
+
   // Démarrer le tracking avec toutes les optimisations
   async startTracking(
     onPositionUpdate: (location: any) => void,
@@ -124,6 +185,9 @@ export class BackgroundTrackingManager {
     if (!('geolocation' in navigator)) {
       throw new Error('geolocation-not-supported');
     }
+
+    this.onPositionUpdateCallback = onPositionUpdate;
+    this.onErrorCallback = onError || null;
 
     // 1. Activer le Wake Lock
     await this.requestWakeLock();
@@ -167,10 +231,13 @@ export class BackgroundTrackingManager {
       }
     );
 
-    // 3. Démarrer le keep-alive
+    // 3. Capturer immédiatement la première position
+    this.captureCurrentPosition();
+
+    // 4. Démarrer le keep-alive
     this.startKeepAlive();
 
-    // 4. Demander la synchronisation en arrière-plan
+    // 5. Demander la synchronisation en arrière-plan
     if (this.serviceWorkerRegistration && 'sync' in this.serviceWorkerRegistration) {
       try {
         await (this.serviceWorkerRegistration as any).sync.register('sync-locations');
@@ -190,6 +257,10 @@ export class BackgroundTrackingManager {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = null;
     }
+
+    this.stopHiddenPolling();
+    this.onPositionUpdateCallback = null;
+    this.onErrorCallback = null;
 
     // 2. Libérer le Wake Lock
     await this.releaseWakeLock();
@@ -224,6 +295,7 @@ export class BackgroundTrackingManager {
   // Nettoyer les ressources
   cleanup() {
     this.stopTracking();
+    this.stopHiddenPolling();
     
     if (this.visibilityChangeHandler && typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
