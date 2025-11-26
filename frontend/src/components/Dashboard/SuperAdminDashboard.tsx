@@ -63,7 +63,33 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
     socketService.connect();
     
     socketService.onLocationUpdate((data) => {
+      setActivities(prev => {
+        const exists = prev.some(activity => activity.userId === data.userId);
+        if (!exists) return prev;
+        return prev.map(activity =>
+          activity.userId === data.userId
+            ? {
+                ...activity,
+                lastLocation: {
+                  id: data.location.id ?? activity.lastLocation?.id ?? 0,
+                  userId: data.userId,
+                  latitude: data.location.latitude,
+                  longitude: data.location.longitude,
+                  speed: data.location.speed,
+                  heading: data.location.heading,
+                  timestamp: data.location.timestamp ?? new Date().toISOString(),
+                  address: data.location.address ?? activity.lastLocation?.address,
+                },
+                lastUpdate: data.location.timestamp ?? new Date().toISOString(),
+                isTracking: true,
+              }
+            : activity
+        );
+      });
+
       setAllLocations(prev => [data.location, ...prev].slice(0, 500));
+
+      // Refresh aggregated lists in the background to keep filters/users in sync
       loadData();
     });
   }, [loadData]);
