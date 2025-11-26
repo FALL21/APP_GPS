@@ -60,17 +60,40 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
   }, []);
 
   const initializeSocket = useCallback(() => {
-    socketService.connect();
+    console.log('[SuperAdmin] Initializing WebSocket connection...');
+    const socket = socketService.connect();
+    
+    // Vérifier la connexion
+    if (socket?.connected) {
+      console.log('[SuperAdmin] WebSocket already connected');
+    } else {
+      console.log('[SuperAdmin] WebSocket connecting...');
+      socket?.once('connect', () => {
+        console.log('[SuperAdmin] WebSocket connected, attaching location update listener');
+      });
+    }
     
     const handleLocationUpdate = (data: { userId: number; location: any }) => {
-      console.log('[SuperAdmin] Location update received:', data);
+      console.log('[SuperAdmin] Location update received:', {
+        userId: data.userId,
+        location: {
+          id: data.location.id,
+          lat: data.location.latitude,
+          lng: data.location.longitude,
+          timestamp: data.location.timestamp,
+        },
+      });
+      
       setActivities(prev => {
         const exists = prev.some(activity => activity.userId === data.userId);
         if (!exists) {
-          console.log(`[SuperAdmin] User ${data.userId} not in activities, skipping update`);
+          console.warn(`[SuperAdmin] User ${data.userId} not in activities list. Current users:`, prev.map(a => a.userId));
+          // Recharger les données pour inclure ce nouvel utilisateur
+          loadData();
           return prev;
         }
-        return prev.map(activity =>
+        
+        const updated = prev.map(activity =>
           activity.userId === data.userId
             ? {
                 ...activity,
@@ -89,12 +112,25 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
               }
             : activity
         );
+        
+        console.log(`[SuperAdmin] Updated activity for user ${data.userId}, isTracking: true`);
+        return updated;
       });
 
       setAllLocations(prev => [data.location, ...prev].slice(0, 500));
     };
     
+    console.log('[SuperAdmin] Attaching location update listener...');
     socketService.onLocationUpdate(handleLocationUpdate);
+    
+    // Vérifier que le listener est bien attaché
+    setTimeout(() => {
+      const socket = socketService.getSocket();
+      if (socket) {
+        const hasListener = socket.hasListeners?.('location_updated') ?? true; // Fallback si hasListeners n'existe pas
+        console.log('[SuperAdmin] WebSocket listener attached, socket connected:', socket.connected);
+      }
+    }, 1000);
     
     // Refresh aggregated lists periodically to keep filters/users in sync
     // Mais ne pas recharger tout à chaque update pour éviter les flickers
