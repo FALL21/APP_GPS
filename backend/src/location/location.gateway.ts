@@ -74,11 +74,15 @@ export class LocationGateway
         data.location,
       );
 
-      // Diffuser à tous les clients qui suivent cet utilisateur
-      this.server.to(`user_${data.userId}`).emit('location_updated', {
+      // Diffuser à tous les clients qui suivent spécifiquement cet utilisateur
+      const payload = {
         userId: data.userId,
         location,
-      });
+      };
+      this.server.to(`user_${data.userId}`).emit('location_updated', payload);
+
+      // Diffuser également globalement pour les tableaux de bord admin/super admin
+      this.server.emit('location_updated', payload);
 
       return { success: true, location };
     } catch (error) {
