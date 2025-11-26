@@ -123,12 +123,20 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
     console.log('[SuperAdmin] Attaching location update listener...');
     socketService.onLocationUpdate(handleLocationUpdate);
     
-    // Vérifier que le listener est bien attaché
+    // Vérifier que le listener est bien attaché après un court délai
     setTimeout(() => {
       const socket = socketService.getSocket();
       if (socket) {
-        const hasListener = socket.hasListeners?.('location_updated') ?? true; // Fallback si hasListeners n'existe pas
-        console.log('[SuperAdmin] WebSocket listener attached, socket connected:', socket.connected);
+        console.log('[SuperAdmin] WebSocket status:', {
+          connected: socket.connected,
+          id: socket.id,
+          // Note: hasListeners n'existe pas toujours dans socket.io-client
+        });
+        
+        // Tester manuellement la réception d'événements en écoutant tous les événements
+        socket.onAny((eventName, ...args) => {
+          console.log(`[SuperAdmin] Socket event received: ${eventName}`, args);
+        });
       }
     }, 1000);
     

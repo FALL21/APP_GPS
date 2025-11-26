@@ -25,7 +25,7 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('✅ Connecté au serveur WebSocket');
+      console.log('✅ Connecté au serveur WebSocket, socket ID:', this.socket?.id);
     });
 
     this.socket.on('disconnect', () => {
@@ -34,6 +34,13 @@ class SocketService {
 
     this.socket.on('connect_error', (error) => {
       console.error('Erreur de connexion WebSocket:', error);
+    });
+
+    // Logger tous les événements pour déboguer
+    this.socket.onAny((eventName, ...args) => {
+      if (eventName !== 'location_updated') {
+        console.log(`[Socket] Event received: ${eventName}`, args);
+      }
     });
 
     return this.socket;
@@ -68,12 +75,21 @@ class SocketService {
     if (!this.socket) {
       this.connect();
     }
-    // Attendre que le socket soit connecté avant d'attacher le listener
+    
+    // Toujours attacher le listener, même si pas encore connecté
+    // Il sera actif dès que la connexion sera établie
+    this.socket?.on('location_updated', (data: { userId: number; location: any }) => {
+      console.log('[Socket] location_updated event received:', { userId: data.userId, locationId: data.location?.id });
+      callback(data);
+    });
+    
+    // Si déjà connecté, le listener est actif immédiatement
     if (this.socket?.connected) {
-      this.socket.on('location_updated', callback);
+      console.log('[Socket] Listener attached to connected socket');
     } else {
+      // Sinon, attendre la connexion
       this.socket?.once('connect', () => {
-        this.socket?.on('location_updated', callback);
+        console.log('[Socket] Socket connected, location_updated listener is now active');
       });
     }
   }
