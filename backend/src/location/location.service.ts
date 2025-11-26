@@ -172,11 +172,16 @@ export class LocationService {
         userEmail: user.email,
         userRole: user.role,
         isTracking,
-        lastUpdate: latestLocation?.timestamp || null,
+        lastUpdate: latestLocation?.timestamp ? latestLocation.timestamp.toISOString() : null,
         lastLocation: latestLocation
           ? {
-              latitude: latestLocation.latitude,
-              longitude: latestLocation.longitude,
+              id: latestLocation.id,
+              latitude: Number(latestLocation.latitude),
+              longitude: Number(latestLocation.longitude),
+              speed: latestLocation.speed ? Number(latestLocation.speed) : null,
+              heading: latestLocation.heading ? Number(latestLocation.heading) : null,
+              timestamp: latestLocation.timestamp ? latestLocation.timestamp.toISOString() : null,
+              address: latestLocation.address || null,
             }
           : null,
         totalLocations: countResult,

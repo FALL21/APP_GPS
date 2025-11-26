@@ -107,8 +107,20 @@ export class LocationGateway
 
   // Méthode pour diffuser une position depuis d'autres parties de l'application
   broadcastLocation(userId: number, location: any) {
-    const payload = { userId, location };
-    this.logger.log(`Broadcasting location update for user ${userId} to ${this.server.sockets.sockets.size} connected clients`);
+    // S'assurer que le format est correct pour le frontend
+    const formattedLocation = {
+      id: location.id,
+      userId: location.userId || userId,
+      latitude: Number(location.latitude),
+      longitude: Number(location.longitude),
+      speed: location.speed ? Number(location.speed) : null,
+      heading: location.heading ? Number(location.heading) : null,
+      timestamp: location.timestamp ? (typeof location.timestamp === 'string' ? location.timestamp : location.timestamp.toISOString()) : new Date().toISOString(),
+      address: location.address || null,
+    };
+    
+    const payload = { userId, location: formattedLocation };
+    this.logger.log(`Broadcasting location update for user ${userId} (lat: ${formattedLocation.latitude}, lng: ${formattedLocation.longitude}) to ${this.server.sockets.sockets.size} connected clients`);
     // Clients abonnés à cet utilisateur
     this.server.to(`user_${userId}`).emit('location_updated', payload);
     // Dashboards admin / super admin (écoutent globalement)
