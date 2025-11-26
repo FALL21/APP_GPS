@@ -71,7 +71,7 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
             ? {
                 ...activity,
                 lastLocation: {
-                  id: data.location.id ?? activity.lastLocation?.id ?? 0,
+                  id: activity.lastLocation?.id ?? 0,
                   userId: data.userId,
                   latitude: data.location.latitude,
                   longitude: data.location.longitude,
