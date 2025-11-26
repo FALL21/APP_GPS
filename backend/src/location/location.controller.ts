@@ -25,17 +25,29 @@ export class LocationController {
   ) {}
 
   @Post()
-  async create(@Request() req, @Body() createLocationDto: CreateLocationDto) {
+  async create(@Request() req, @Body() body: CreateLocationDto | CreateLocationDto[]) {
     const userId = req.user.userId;
-    console.log(`[Location] POST /locations - User ${userId} - Lat: ${createLocationDto.latitude}, Lng: ${createLocationDto.longitude}`);
-    const location = await this.locationService.create(
-      userId,
-      createLocationDto,
-    );
-    // Diffuser la mise à jour de position aux dashboards via WebSocket
-    console.log(`[Location] Broadcasting location update for user ${userId} via WebSocket`);
-    this.locationGateway.broadcastLocation(userId, location);
-    return location;
+    
+    // Gérer à la fois un objet unique et un tableau (batch)
+    const locations = Array.isArray(body) ? body : [body];
+    console.log(`[Location] POST /locations - User ${userId} - ${locations.length} location(s)`);
+    
+    const savedLocations = [];
+    for (const createLocationDto of locations) {
+      const location = await this.locationService.create(
+        userId,
+        createLocationDto,
+      );
+      savedLocations.push(location);
+      
+      // Diffuser chaque position aux dashboards via WebSocket
+      this.locationGateway.broadcastLocation(userId, location);
+    }
+    
+    console.log(`[Location] Saved and broadcasted ${savedLocations.length} location(s) for user ${userId}`);
+    
+    // Retourner un objet unique si une seule position, sinon un tableau
+    return Array.isArray(body) ? savedLocations : savedLocations[0];
   }
 
   @Get()

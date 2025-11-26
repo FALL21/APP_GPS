@@ -3,7 +3,16 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: true,
+    rawBody: false,
+  });
+
+  // Augmenter la limite de taille du body pour accepter les batches de positions GPS
+  // Par défaut Express limite à 100 KB, on augmente à 1 MB pour gérer les batches
+  const express = require('express');
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
   // Activer CORS pour permettre les connexions depuis le frontend
   const allowedOrigins = [
