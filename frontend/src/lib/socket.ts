@@ -65,8 +65,16 @@ class SocketService {
   }
 
   onLocationUpdate(callback: (data: { userId: number; location: any }) => void) {
-    if (this.socket) {
+    if (!this.socket) {
+      this.connect();
+    }
+    // Attendre que le socket soit connecté avant d'attacher le listener
+    if (this.socket?.connected) {
       this.socket.on('location_updated', callback);
+    } else {
+      this.socket?.once('connect', () => {
+        this.socket?.on('location_updated', callback);
+      });
     }
   }
 

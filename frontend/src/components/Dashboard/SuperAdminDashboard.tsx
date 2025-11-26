@@ -62,21 +62,25 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
   const initializeSocket = useCallback(() => {
     socketService.connect();
     
-    socketService.onLocationUpdate((data) => {
+    const handleLocationUpdate = (data: { userId: number; location: any }) => {
+      console.log('[SuperAdmin] Location update received:', data);
       setActivities(prev => {
         const exists = prev.some(activity => activity.userId === data.userId);
-        if (!exists) return prev;
+        if (!exists) {
+          console.log(`[SuperAdmin] User ${data.userId} not in activities, skipping update`);
+          return prev;
+        }
         return prev.map(activity =>
           activity.userId === data.userId
             ? {
                 ...activity,
                 lastLocation: {
-                  id: activity.lastLocation?.id ?? 0,
+                  id: data.location.id ?? activity.lastLocation?.id ?? 0,
                   userId: data.userId,
                   latitude: data.location.latitude,
                   longitude: data.location.longitude,
-                  speed: data.location.speed,
-                  heading: data.location.heading,
+                  speed: data.location.speed ?? null,
+                  heading: data.location.heading ?? null,
                   timestamp: data.location.timestamp ?? new Date().toISOString(),
                   address: data.location.address ?? activity.lastLocation?.address,
                 },
@@ -88,11 +92,13 @@ export default function SuperAdminDashboard({ user, onLogout }: SuperAdminDashbo
       });
 
       setAllLocations(prev => [data.location, ...prev].slice(0, 500));
-
-      // Refresh aggregated lists in the background to keep filters/users in sync
-      loadData();
-    });
-  }, [loadData]);
+    };
+    
+    socketService.onLocationUpdate(handleLocationUpdate);
+    
+    // Refresh aggregated lists periodically to keep filters/users in sync
+    // Mais ne pas recharger tout à chaque update pour éviter les flickers
+  }, []);
 
   useEffect(() => {
     filtersRef.current = filters;

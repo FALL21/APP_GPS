@@ -26,12 +26,15 @@ export class LocationController {
 
   @Post()
   async create(@Request() req, @Body() createLocationDto: CreateLocationDto) {
+    const userId = req.user.userId;
+    console.log(`[Location] POST /locations - User ${userId} - Lat: ${createLocationDto.latitude}, Lng: ${createLocationDto.longitude}`);
     const location = await this.locationService.create(
-      req.user.userId,
+      userId,
       createLocationDto,
     );
     // Diffuser la mise à jour de position aux dashboards via WebSocket
-    this.locationGateway.broadcastLocation(req.user.userId, location);
+    console.log(`[Location] Broadcasting location update for user ${userId} via WebSocket`);
+    this.locationGateway.broadcastLocation(userId, location);
     return location;
   }
 

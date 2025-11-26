@@ -14,11 +14,25 @@ import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:8080',
-      'http://frontend:3000',
-    ],
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:8080',
+        'http://frontend:3000',
+        'https://prodis-gps.up.railway.app',
+      ];
+      // En production, accepter aussi les origines Railway
+      if (process.env.NODE_ENV === 'production') {
+        if (!origin || origin.includes('.railway.app') || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+      }
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   },
 })
@@ -94,6 +108,7 @@ export class LocationGateway
   // Méthode pour diffuser une position depuis d'autres parties de l'application
   broadcastLocation(userId: number, location: any) {
     const payload = { userId, location };
+    this.logger.log(`Broadcasting location update for user ${userId} to ${this.server.sockets.sockets.size} connected clients`);
     // Clients abonnés à cet utilisateur
     this.server.to(`user_${userId}`).emit('location_updated', payload);
     // Dashboards admin / super admin (écoutent globalement)
