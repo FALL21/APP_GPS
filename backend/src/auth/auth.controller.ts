@@ -36,6 +36,19 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  // Endpoint utilisé par l'app mobile pour récupérer le profil courant
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@CurrentUser() user: any) {
+    const currentUser = await this.authService.validateUser(user.userId);
+    return {
+      id: currentUser.id,
+      email: currentUser.email,
+      name: currentUser.name,
+      role: currentUser.role,
+    };
+  }
+
   @Post('create-super-admin')
   async createSuperAdmin(@Body() createSuperAdminDto: CreateSuperAdminDto) {
     return this.authService.createSuperAdmin(createSuperAdminDto);
