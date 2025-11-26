@@ -70,8 +70,13 @@ export interface GpsActivity {
   isTracking: boolean;
   lastUpdate: string;
   lastLocation?: {
+    id?: number;
     latitude: number;
     longitude: number;
+    speed?: number;
+    heading?: number;
+    timestamp?: string;
+    address?: string;
   };
   totalLocations?: number;
 }
