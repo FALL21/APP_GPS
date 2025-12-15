@@ -92,3 +92,4 @@ Les logs de débogage sont disponibles dans la console du navigateur avec le pr�
 - Pour un tracking GPS continu garanti, une application native est recommandée
 
 
+
